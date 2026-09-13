@@ -21,10 +21,27 @@ app.get('/', (req, res) => {
 
 const httpServer = createServer(app);
 
-// Initialize Socket.io and point its cross-origin access strictly to your Vite dev server
+const isAllowedOrigin = (origin, callback) => {
+  if (!origin) {
+    callback(null, true);
+    return;
+  }
+
+  try {
+    const { hostname, port: originPort } = new URL(origin);
+    const allowed =
+      (hostname === 'localhost' || hostname === '127.0.0.1') &&
+      (!originPort || originPort === '5173' || originPort === '5174');
+    callback(null, allowed);
+  } catch {
+    callback(null, false);
+  }
+};
+
+// Keep local Vite instances connected during development.
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173', // Adjust this if your React app is running on a different port
+    origin: isAllowedOrigin,
     methods: ['GET', 'POST'],
   },
 });
@@ -40,21 +57,24 @@ io.on('connection', (socket) => {
       const { driverId, longitude, latitude, bearing, status } = data;
 
       try {
-        // 1. Core Optimization: Write vectors instantly to Redis Cloud Geospatial Index
-        await client.geoadd('active_drivers', longitude, latitude, driverId);
-
-        // 2. Cache vehicle direction and status variables in a Redis Hash map
-        await client.hset(`driver:meta:${driverId}`, {
-          bearing,
-          status,
-          updatedAt: Date.now(),
-        });
-
-        // Calculate absolute pipeline execution processing time for your recruiter metrics panel
+        if (client.status === 'ready') {
+          await client.geoadd('active_drivers', longitude, latitude, driverId);
+          await client.hset(`driver:meta:${driverId}`, {
+            bearing,
+            status,
+            updatedAt: Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error(
+          `❌ Telemetry ingestion failure for ${driverId}:`,
+          error.message,
+        );
+      } finally {
         const diff = process.hrtime(startTime);
-        const latencyMs = (diff * 1000 + diff / 1000000).toFixed(2);
+        const latencyMs = (diff[0] * 1000 + diff[1] / 1000000).toFixed(2);
 
-        // 3. System Segregation: Broadcast moving coordinates straight to viewing passengers
+        // A Redis outage should not hide live coordinates from passengers.
         io.emit('fleet-coordinates', {
           driverId,
           longitude,
@@ -63,11 +83,6 @@ io.on('connection', (socket) => {
           status,
           latencyMs,
         });
-      } catch (error) {
-        console.error(
-          `❌ Telemetry ingestion failure for ${driverId}:`,
-          error.message,
-        );
       }
     });
   }
