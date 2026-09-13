@@ -115,8 +115,8 @@ export default function MapCanvas({ isDarkMode }) {
         className="h-full w-full"
       >
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; CARTO &copy; OpenStreetMap contributors"
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         {fleet.map((vehicle, index) => (
           <AnimatedVehicleMarker
