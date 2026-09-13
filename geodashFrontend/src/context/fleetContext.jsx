@@ -15,7 +15,7 @@ export const FleetProvider = ({ children }) => {
 
   useEffect(() => {
     // Connect to our upcoming Express WebSocket server gateway
-    const socket = io('http://localhost:5000', {
+    const socket = io('http://localhost:3000', {
       query: { userId: 'dashboard_viewer', role: 'passenger' },
     });
 
@@ -25,24 +25,29 @@ export const FleetProvider = ({ children }) => {
         data;
 
       // 1. Dynamic State Synchronization: Update or insert vehicle position tracking
-      setVehicles((prev) => ({
-        ...prev,
-        [driverId]: {
-          longitude,
-          latitude,
-          bearing,
-          status,
-          lastUpdated: Date.now(),
-        },
-      }));
+      setVehicles((prevVehicles) => {
+        const updatedVehicles = {
+          ...prevVehicles,
+          [driverId]: {
+            longitude,
+            latitude,
+            bearing,
+            status,
+            lastUpdated: Date.now(),
+          },
+        };
 
-      // 2. Telemetry Parsing: Continually recalculate engineering latency panels
-      setMetrics((prev) => ({
-        ...prev,
-        activeCount: Object.keys(prev).length,
-        redisLatency: `${latencyMs}ms`,
-        throughput: prev.throughput + 1,
-      }));
+        // 2. Telemetry Parsing: Continually recalculate engineering latency panels
+        // Moving this here allows us to count vehicles using the correct updated dataset
+        setMetrics((prevMetrics) => ({
+          ...prevMetrics,
+          activeCount: Object.keys(updatedVehicles).length, // FIX: Counts vehicles, not metrics object keys
+          redisLatency: `${latencyMs || '0.0'}ms`, // Formats fallback cleanly
+          throughput: prevMetrics.throughput + 1,
+        }));
+
+        return updatedVehicles;
+      });
     });
 
     // Track data packet speed windows through standard intervals

@@ -45,8 +45,7 @@ export default function TelemetryPanel({ isDarkMode, setIsDarkMode }) {
             <Activity className="w-3.5 h-3.5" /> Redis Ingest
           </span>
           <span className="font-mono font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded animate-pulse">
-            ⚡{' '}
-            {metrics.redisLatency === '0.0ms' ? '1.8ms' : metrics.redisLatency}
+            ⚡ {metrics.redisLatency}
           </span>
         </div>
 
@@ -54,7 +53,7 @@ export default function TelemetryPanel({ isDarkMode, setIsDarkMode }) {
         <div className="flex items-center justify-between text-xs">
           <span className="opacity-70">Drivers Connected Cluster</span>
           <span className="font-mono font-bold">
-            {metrics.activeCount || 24} Units
+            {metrics.activeCount} Units
           </span>
         </div>
 
