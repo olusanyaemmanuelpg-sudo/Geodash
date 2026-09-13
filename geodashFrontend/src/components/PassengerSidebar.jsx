@@ -9,15 +9,12 @@ import {
   CreditCard,
 } from 'lucide-react';
 
-function formatLocation(location) {
-  return `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
-}
-
 export default function PassengerSidebar({
   selectionMode,
   setSelectionMode,
   pickup,
   destination,
+  locationLabels,
 }) {
   const [selectedTier, setSelectedTier] = useState('standard');
 
@@ -90,7 +87,8 @@ export default function PassengerSidebar({
                 Pickup Point
               </p>
               <p className="text-xs font-medium truncate">
-                {formatLocation(pickup)}
+                {locationLabels.pickup ||
+                  `${pickup.latitude.toFixed(4)}, ${pickup.longitude.toFixed(4)}`}
               </p>
             </div>
           </button>
@@ -106,7 +104,8 @@ export default function PassengerSidebar({
                 Destination
               </p>
               <p className="text-xs font-medium truncate">
-                {formatLocation(destination)}
+                {locationLabels.destination ||
+                  `${destination.latitude.toFixed(4)}, ${destination.longitude.toFixed(4)}`}
               </p>
             </div>
           </button>

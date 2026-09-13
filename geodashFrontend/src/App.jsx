@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FleetProvider } from './context/fleetContext';
 import PassengerSidebar from './components/PassengerSidebar';
 import TelemetryPanel from './components/TelemetryPanel';
@@ -15,6 +15,59 @@ function App() {
     latitude: 37.7955,
     longitude: -122.3937,
   });
+  const [locationLabels, setLocationLabels] = useState({
+    pickup: '540 Howard St, San Francisco',
+    destination: 'SF Ferry Building, San Francisco',
+  });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const lookup = async (location, key) => {
+      setLocationLabels((previous) => ({ ...previous, [key]: 'Locating...' }));
+
+      try {
+        const params = new URLSearchParams({
+          format: 'jsonv2',
+          lat: String(location.latitude),
+          lon: String(location.longitude),
+          zoom: '18',
+          addressdetails: '1',
+        });
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?${params}`,
+          {
+            headers: { Accept: 'application/json' },
+            signal: controller.signal,
+          },
+        );
+        if (!response.ok) throw new Error('Location lookup failed');
+        const result = await response.json();
+        setLocationLabels((previous) => ({
+          ...previous,
+          [key]:
+            result.display_name ||
+            `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`,
+        }));
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setLocationLabels((previous) => ({
+            ...previous,
+            [key]: `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`,
+          }));
+        }
+      }
+    };
+
+    const timer = setTimeout(() => {
+      lookup(pickup, 'pickup');
+      lookup(destination, 'destination');
+    }, 350);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [pickup, destination]);
 
   const handleMapSelection = (location) => {
     if (selectionMode === 'pickup') {
@@ -45,6 +98,7 @@ function App() {
           setSelectionMode={setSelectionMode}
           pickup={pickup}
           destination={destination}
+          locationLabels={locationLabels}
         />
 
         {/* Floating Top-Right Performance Metric Deck */}
