@@ -11,12 +11,38 @@ export const FleetProvider = ({ children }) => {
     throughput: 0,
     redisLatency: '0.0ms',
     dbSyncCountdown: 5.0,
+    connectionStatus: 'connecting',
   });
 
   useEffect(() => {
     // Connect to our upcoming Express WebSocket server gateway
     const socket = io('http://localhost:3000', {
       query: { userId: 'dashboard_viewer', role: 'passenger' },
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 5000,
+    });
+
+    socket.on('connect', () => {
+      setMetrics((prevMetrics) => ({
+        ...prevMetrics,
+        connectionStatus: 'connected',
+      }));
+    });
+
+    socket.on('connect_error', () => {
+      setMetrics((prevMetrics) => ({
+        ...prevMetrics,
+        connectionStatus: 'disconnected',
+      }));
+    });
+
+    socket.io.on('reconnect_failed', () => {
+      setMetrics((prevMetrics) => ({
+        ...prevMetrics,
+        connectionStatus: 'offline',
+      }));
     });
 
     // Listen for high-frequency live coordinate broadcasts from the server

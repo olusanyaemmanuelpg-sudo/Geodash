@@ -44,8 +44,19 @@ export default function TelemetryPanel({ isDarkMode, setIsDarkMode }) {
           <span className="opacity-70 flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5" /> Redis Ingest
           </span>
-          <span className="font-mono font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded animate-pulse">
+          <span
+            className={`font-mono font-bold px-1.5 py-0.5 rounded ${metrics.connectionStatus === 'connected' ? 'text-emerald-500 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'}`}
+          >
             ⚡ {metrics.redisLatency}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between text-xs">
+          <span className="opacity-70">Telemetry connection</span>
+          <span
+            className={`font-mono font-bold ${metrics.connectionStatus === 'connected' ? 'text-emerald-500' : 'text-rose-500'}`}
+          >
+            {metrics.connectionStatus}
           </span>
         </div>
 
