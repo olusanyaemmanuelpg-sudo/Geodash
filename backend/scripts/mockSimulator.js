@@ -38,14 +38,10 @@ for (let i = 1; i <= NUMBER_OF_DRIVERS; i++) {
       lng += Math.cos((angle * Math.PI) / 180) * speedFactor;
       lat += Math.sin((angle * Math.PI) / 180) * speedFactor;
 
-      // Map mathematical GPS angles cleanly onto our custom React visual map matrix bounds
-      const mappedLng = Math.abs((lng + 122.45) / 0.1) * 100;
-      const mappedLat = Math.abs((lat - 37.82) / 0.08) * 100;
-
       socket.emit('update-location', {
         driverId,
-        longitude: Math.max(5, Math.min(95, mappedLng)), // Enforces safety frame bounds
-        latitude: Math.max(5, Math.min(95, mappedLat)),
+        longitude: lng,
+        latitude: lat,
         bearing: Math.floor(angle % 360),
         status: Math.random() > 0.85 ? 'idle' : 'active',
       });
