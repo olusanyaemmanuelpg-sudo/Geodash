@@ -77,6 +77,34 @@
   border: 0;
 }
 
+.pickup-marker,
+.destination-marker {
+  background: transparent;
+  border: 0;
+}
+
+.pickup-marker__pin,
+.destination-marker__pin {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 3px solid white;
+  border-radius: 999px 999px 999px 4px;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  transform: rotate(-45deg);
+  box-shadow: 0 3px 8px rgb(15 23 42 / 35%);
+}
+
+.pickup-marker__pin {
+  background: #2563eb;
+}
+.destination-marker__pin {
+  background: #111827;
+}
+
 .fleet-car {
   position: relative;
   width: 34px;

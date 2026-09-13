@@ -9,7 +9,16 @@ import {
   CreditCard,
 } from 'lucide-react';
 
-export default function PassengerSidebar() {
+function formatLocation(location) {
+  return `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
+}
+
+export default function PassengerSidebar({
+  selectionMode,
+  setSelectionMode,
+  pickup,
+  destination,
+}) {
   const [selectedTier, setSelectedTier] = useState('standard');
 
   const rideTiers = [
@@ -70,29 +79,37 @@ export default function PassengerSidebar() {
         <div className="space-y-2 relative">
           <div className="absolute left-[1.15rem] top-7 bottom-7 w-0.5 bg-gray-200 dark:bg-zinc-700"></div>
 
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 p-2.5 rounded-lg border border-gray-200/80 dark:border-zinc-700 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setSelectionMode('pickup')}
+            className={`w-full flex items-center gap-3 bg-white dark:bg-zinc-800 p-2.5 rounded-lg border text-left shadow-sm ${selectionMode === 'pickup' ? 'border-blue-500 ring-2 ring-blue-500/15' : 'border-gray-200/80 dark:border-zinc-700'}`}
+          >
             <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
                 Pickup Point
               </p>
               <p className="text-xs font-medium truncate">
-                540 Howard St, San Francisco
+                {formatLocation(pickup)}
               </p>
             </div>
-          </div>
+          </button>
 
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 p-2.5 rounded-lg border border-gray-200/80 dark:border-zinc-700 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setSelectionMode('destination')}
+            className={`w-full flex items-center gap-3 bg-white dark:bg-zinc-800 p-2.5 rounded-lg border text-left shadow-sm ${selectionMode === 'destination' ? 'border-blue-500 ring-2 ring-blue-500/15' : 'border-gray-200/80 dark:border-zinc-700'}`}
+          >
             <Navigation className="w-4 h-4 text-zinc-900 dark:text-white flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
                 Destination
               </p>
               <p className="text-xs font-medium truncate">
-                SF Ferry Building (The Embarcadero)
+                {formatLocation(destination)}
               </p>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 

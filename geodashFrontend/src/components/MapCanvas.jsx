@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, Marker, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import { MapPin, Navigation } from 'lucide-react';
 import { useFleet } from '../context/fleetContext';
@@ -28,6 +28,33 @@ const demoVehicles = [
     status: 'idle',
   },
 ];
+
+const TILE_LAYERS = {
+  street: {
+    label: 'Street',
+    attribution:
+      'Tiles &copy; Esri &mdash; Source: Esri, OpenStreetMap contributors',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+  },
+  light: {
+    label: 'Light',
+    attribution: '&copy; CARTO &copy; OpenStreetMap contributors',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  },
+  topo: {
+    label: 'Terrain',
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, USGS, NOAA',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+  },
+};
+
+function MapClickHandler({ onMapSelection }) {
+  useMapEvents({
+    click: ({ latlng }) =>
+      onMapSelection({ latitude: latlng.lat, longitude: latlng.lng }),
+  });
+  return null;
+}
 
 function createCarIcon(vehicle) {
   const statusClass = vehicle.status === 'idle' ? 'is-idle' : 'is-active';
@@ -74,8 +101,15 @@ function AnimatedVehicleMarker({ vehicle }) {
   return <Marker position={position} icon={createCarIcon(vehicle)} />;
 }
 
-export default function MapCanvas({ isDarkMode }) {
+export default function MapCanvas({
+  isDarkMode,
+  selectionMode,
+  pickup,
+  destination,
+  onMapSelection,
+}) {
   const { vehicles } = useFleet();
+  const [tileLayer, setTileLayer] = useState('street');
   const fleet =
     Object.keys(vehicles).length > 0 ? Object.values(vehicles) : demoVehicles;
 
@@ -115,16 +149,50 @@ export default function MapCanvas({ isDarkMode }) {
         className="h-full w-full"
       >
         <TileLayer
-          attribution="&copy; CARTO &copy; OpenStreetMap contributors"
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution={TILE_LAYERS[tileLayer].attribution}
+          url={TILE_LAYERS[tileLayer].url}
         />
+        <MapClickHandler onMapSelection={onMapSelection} />
         {fleet.map((vehicle, index) => (
           <AnimatedVehicleMarker
             key={vehicle.driverId || index}
             vehicle={vehicle}
           />
         ))}
+        <Marker
+          position={[pickup.latitude, pickup.longitude]}
+          icon={divIcon({
+            className: 'pickup-marker',
+            html: '<div class="pickup-marker__pin">P</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+          })}
+        />
+        <Marker
+          position={[destination.latitude, destination.longitude]}
+          icon={divIcon({
+            className: 'destination-marker',
+            html: '<div class="destination-marker__pin">D</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+          })}
+        />
       </MapContainer>
+      <div className="absolute right-4 top-4 z-[401] flex items-center gap-1 rounded-xl border border-white/70 bg-white/90 p-1 shadow-lg backdrop-blur-md">
+        {Object.entries(TILE_LAYERS).map(([id, layer]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTileLayer(id)}
+            className={`rounded-lg px-2.5 py-1.5 text-[10px] font-semibold ${tileLayer === id ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100'}`}
+          >
+            {layer.label}
+          </button>
+        ))}
+      </div>
+      <div className="absolute bottom-20 left-1/2 z-[401] -translate-x-1/2 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-zinc-600 shadow-lg backdrop-blur-md">
+        Click map to set {selectionMode === 'pickup' ? 'pickup' : 'destination'}
+      </div>
       <div className="pointer-events-none absolute inset-0 z-[400] border border-black/10" />
       <div className="pointer-events-none absolute left-[61%] top-[51%] z-[400] h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-400/40 bg-emerald-400/[0.05]" />
       <div className="pointer-events-none absolute left-[61%] top-[51%] z-[400] -translate-x-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700/80">
