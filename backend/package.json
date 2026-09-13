@@ -17,6 +17,7 @@
     "express": "^5.2.1",
     "ioredis": "^6.0.0",
     "mongoose": "^9.10.0",
+    "redis-cli": "^2.1.2",
     "socket.io": "^4.8.3"
   }
 }
