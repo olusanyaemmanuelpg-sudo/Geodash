@@ -8,6 +8,7 @@ const app = express();
 const port = 3000;
 const cors = require('cors');
 const connectDB = require('./config/db.js');
+const driverPositions = new Map();
 
 // Connect to MongoDB
 connectDB();
@@ -18,6 +19,76 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');
+});
+
+app.post('/api/rides/match', async (req, res) => {
+  const { latitude, longitude, radiusKm = 5 } = req.body;
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return res
+      .status(400)
+      .json({ error: 'Valid pickup latitude and longitude are required.' });
+  }
+
+  try {
+    let candidates = [];
+
+    if (client.status === 'ready') {
+      candidates = await client.geosearch(
+        'active_drivers',
+        'FROMLONLAT',
+        longitude,
+        latitude,
+        'BYRADIUS',
+        radiusKm,
+        'km',
+        'ASC',
+        'COUNT',
+        25,
+        'WITHDIST',
+        'WITHCOORD',
+      );
+    }
+
+    for (const candidate of candidates) {
+      const [driverId, distanceKm, coordinates] = candidate;
+      const status = await client.hget(`driver:meta:${driverId}`, 'status');
+      if (status !== 'idle') {
+        return res.json({
+          driverId,
+          distanceKm: Number(distanceKm),
+          longitude: Number(coordinates[0]),
+          latitude: Number(coordinates[1]),
+          status: status || 'active',
+        });
+      }
+    }
+
+    const fallback = [...driverPositions.values()]
+      .filter((driver) => driver.status !== 'idle')
+      .map((driver) => ({
+        ...driver,
+        distanceKm:
+          Math.sqrt(
+            (driver.latitude - latitude) ** 2 +
+              (driver.longitude - longitude) ** 2,
+          ) * 111,
+      }))
+      .sort((first, second) => first.distanceKm - second.distanceKm)[0];
+
+    if (!fallback || fallback.distanceKm > radiusKm) {
+      return res
+        .status(404)
+        .json({ error: 'No available driver found nearby.' });
+    }
+
+    return res.json(fallback);
+  } catch (error) {
+    console.error('Ride matching failed:', error.message);
+    return res
+      .status(503)
+      .json({ error: 'Matching service is temporarily unavailable.' });
+  }
 });
 
 const httpServer = createServer(app);
@@ -56,6 +127,13 @@ io.on('connection', (socket) => {
     socket.on('update-location', async (data) => {
       const startTime = process.hrtime();
       const { driverId, longitude, latitude, bearing, status } = data;
+      driverPositions.set(driverId, {
+        driverId,
+        longitude,
+        latitude,
+        bearing,
+        status,
+      });
 
       try {
         if (client.status === 'ready') {
