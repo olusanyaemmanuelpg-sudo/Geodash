@@ -19,6 +19,9 @@ function App() {
     pickup: '540 Howard St, San Francisco',
     destination: 'SF Ferry Building, San Francisco',
   });
+  const [selectedDriverId, setSelectedDriverId] = useState(null);
+  const [isMatching, setIsMatching] = useState(false);
+  const [matchMessage, setMatchMessage] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -77,6 +80,30 @@ function App() {
     setDestination(location);
   };
 
+  const handleRequestRide = async () => {
+    setIsMatching(true);
+    setMatchMessage('Searching for the closest available driver...');
+    setSelectedDriverId(null);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/rides/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pickup),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'No driver found');
+      setSelectedDriverId(result.driverId);
+      setMatchMessage(
+        `${result.driverId} assigned • ${result.distanceKm.toFixed(2)} km away`,
+      );
+    } catch (error) {
+      setMatchMessage(error.message);
+    } finally {
+      setIsMatching(false);
+    }
+  };
+
   return (
     <FleetProvider>
       <div
@@ -90,6 +117,7 @@ function App() {
           pickup={pickup}
           destination={destination}
           onMapSelection={handleMapSelection}
+          selectedDriverId={selectedDriverId}
         />
 
         {/* Floating Left Uber-Style Booking Form */}
@@ -99,6 +127,9 @@ function App() {
           pickup={pickup}
           destination={destination}
           locationLabels={locationLabels}
+          onRequestRide={handleRequestRide}
+          isMatching={isMatching}
+          matchMessage={matchMessage}
         />
 
         {/* Floating Top-Right Performance Metric Deck */}

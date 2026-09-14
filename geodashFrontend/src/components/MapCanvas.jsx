@@ -56,17 +56,17 @@ function MapClickHandler({ onMapSelection }) {
   return null;
 }
 
-function createCarIcon(vehicle) {
+function createCarIcon(vehicle, selected, hasSelection) {
   const statusClass = vehicle.status === 'idle' ? 'is-idle' : 'is-active';
   return divIcon({
-    className: 'fleet-car-marker',
+    className: `fleet-car-marker ${selected ? 'is-selected' : ''} ${hasSelection && !selected ? 'is-dimmed' : ''}`,
     iconSize: [34, 58],
     iconAnchor: [17, 29],
     html: `<div class="fleet-car ${statusClass}" style="--bearing:${vehicle.bearing || 0}deg"><span class="fleet-car__body"></span><span class="fleet-car__glass fleet-car__glass--front"></span><span class="fleet-car__glass fleet-car__glass--rear"></span><span class="fleet-car__wheel fleet-car__wheel--left"></span><span class="fleet-car__wheel fleet-car__wheel--right"></span><span class="fleet-car__headlights"></span><span class="fleet-car__taillights"></span>${vehicle.status !== 'idle' ? '<span class="fleet-car__signal"></span>' : ''}</div>`,
   });
 }
 
-function AnimatedVehicleMarker({ vehicle }) {
+function AnimatedVehicleMarker({ vehicle, selectedDriverId }) {
   const [position, setPosition] = useState([
     vehicle.latitude,
     vehicle.longitude,
@@ -98,7 +98,16 @@ function AnimatedVehicleMarker({ vehicle }) {
     };
   }, [vehicle.latitude, vehicle.longitude]);
 
-  return <Marker position={position} icon={createCarIcon(vehicle)} />;
+  return (
+    <Marker
+      position={position}
+      icon={createCarIcon(
+        vehicle,
+        selectedDriverId === vehicle.driverId,
+        Boolean(selectedDriverId),
+      )}
+    />
+  );
 }
 
 export default function MapCanvas({
@@ -107,6 +116,7 @@ export default function MapCanvas({
   pickup,
   destination,
   onMapSelection,
+  selectedDriverId,
 }) {
   const { vehicles } = useFleet();
   const [tileLayer, setTileLayer] = useState('street');
@@ -157,6 +167,7 @@ export default function MapCanvas({
           <AnimatedVehicleMarker
             key={vehicle.driverId || index}
             vehicle={vehicle}
+            selectedDriverId={selectedDriverId}
           />
         ))}
         <Marker

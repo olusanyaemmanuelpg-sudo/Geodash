@@ -15,6 +15,9 @@ export default function PassengerSidebar({
   pickup,
   destination,
   locationLabels,
+  onRequestRide,
+  isMatching,
+  matchMessage,
 }) {
   const [selectedTier, setSelectedTier] = useState('standard');
 
@@ -178,9 +181,19 @@ export default function PassengerSidebar({
           </span>
         </div>
 
-        <button className="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-900 dark:hover:bg-zinc-100 font-bold py-3 px-4 rounded-xl shadow-md transition text-sm flex items-center justify-between px-5">
+        {matchMessage && (
+          <p className="px-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+            {matchMessage}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={onRequestRide}
+          disabled={isMatching}
+          className="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-900 dark:hover:bg-zinc-100 disabled:cursor-wait disabled:opacity-60 font-bold py-3 px-4 rounded-xl shadow-md transition text-sm flex items-center justify-between px-5"
+        >
           <span>
-            Request{' '}
+            {isMatching ? 'Finding driver...' : 'Request '}
             {rideTiers.find((t) => t.id === selectedTier)?.name.split(' ')[0]}
           </span>
           <span className="opacity-90">

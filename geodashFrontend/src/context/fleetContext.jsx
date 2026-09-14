@@ -55,6 +55,7 @@ export const FleetProvider = ({ children }) => {
         const updatedVehicles = {
           ...prevVehicles,
           [driverId]: {
+            driverId,
             longitude,
             latitude,
             bearing,
