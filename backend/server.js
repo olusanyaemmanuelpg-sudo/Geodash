@@ -8,6 +8,8 @@ const app = express();
 const port = 3000;
 const cors = require('cors');
 const connectDB = require('./config/db.js');
+const mongoose = require('mongoose');
+const RideRequest = require('./models/RideRequest.js');
 const driverPositions = new Map();
 
 // Connect to MongoDB
@@ -22,7 +24,14 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/rides/match', async (req, res) => {
-  const { latitude, longitude, radiusKm = 5 } = req.body;
+  const {
+    latitude,
+    longitude,
+    destination,
+    passengerId = 'demo-passenger',
+    fare = 14.2,
+    radiusKm = 5,
+  } = req.body;
 
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
     return res
@@ -31,6 +40,26 @@ app.post('/api/rides/match', async (req, res) => {
   }
 
   try {
+    let rideRequest = null;
+    if (mongoose.connection.readyState === 1) {
+      rideRequest = await RideRequest.create({
+        passengerId,
+        pickupLocation: {
+          type: 'Point',
+          coordinates: [longitude, latitude],
+        },
+        dropoffLocation: {
+          type: 'Point',
+          coordinates: [
+            Number(destination?.longitude ?? longitude),
+            Number(destination?.latitude ?? latitude),
+          ],
+        },
+        fare,
+        status: 'SEARCHING',
+      });
+    }
+
     let candidates = [];
 
     if (client.status === 'ready') {
@@ -54,13 +83,21 @@ app.post('/api/rides/match', async (req, res) => {
       const [driverId, distanceKm, coordinates] = candidate;
       const status = await client.hget(`driver:meta:${driverId}`, 'status');
       if (status !== 'idle') {
-        return res.json({
+        const match = {
           driverId,
           distanceKm: Number(distanceKm),
           longitude: Number(coordinates[0]),
           latitude: Number(coordinates[1]),
           status: status || 'active',
-        });
+        };
+
+        if (rideRequest) {
+          rideRequest.driverId = driverId;
+          rideRequest.status = 'ACCEPTED';
+          await rideRequest.save();
+        }
+
+        return res.json({ ...match, rideRequestId: rideRequest?._id });
       }
     }
 
@@ -77,17 +114,44 @@ app.post('/api/rides/match', async (req, res) => {
       .sort((first, second) => first.distanceKm - second.distanceKm)[0];
 
     if (!fallback || fallback.distanceKm > radiusKm) {
-      return res
-        .status(404)
-        .json({ error: 'No available driver found nearby.' });
+      return res.status(404).json({
+        error: 'No available driver found nearby.',
+        rideRequestId: rideRequest?._id,
+      });
     }
 
-    return res.json(fallback);
+    if (rideRequest) {
+      rideRequest.driverId = fallback.driverId;
+      rideRequest.status = 'ACCEPTED';
+      await rideRequest.save();
+    }
+
+    return res.json({ ...fallback, rideRequestId: rideRequest?._id });
   } catch (error) {
     console.error('Ride matching failed:', error.message);
     return res
       .status(503)
       .json({ error: 'Matching service is temporarily unavailable.' });
+  }
+});
+
+app.get('/api/rides/:rideRequestId', async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.rideRequestId)) {
+    return res.status(400).json({ error: 'Invalid ride request ID.' });
+  }
+
+  try {
+    const rideRequest = await RideRequest.findById(
+      req.params.rideRequestId,
+    ).lean();
+    if (!rideRequest)
+      return res.status(404).json({ error: 'Ride request not found.' });
+    return res.json(rideRequest);
+  } catch (error) {
+    console.error('Ride request lookup failed:', error.message);
+    return res
+      .status(503)
+      .json({ error: 'Ride history is temporarily unavailable.' });
   }
 });
 
