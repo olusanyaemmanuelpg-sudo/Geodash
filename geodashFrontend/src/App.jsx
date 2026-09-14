@@ -89,7 +89,11 @@ function App() {
       const response = await fetch('http://localhost:3000/api/rides/match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pickup),
+        body: JSON.stringify({
+          ...pickup,
+          destination,
+          fare: 14.2,
+        }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'No driver found');
