@@ -11,6 +11,7 @@ const connectDB = require('./config/db.js');
 const mongoose = require('mongoose');
 const RideRequest = require('./models/RideRequest.js');
 const driverPositions = new Map();
+const DRIVER_STALE_AFTER_MS = 10_000;
 
 // Connect to MongoDB
 connectDB();
@@ -82,7 +83,12 @@ app.post('/api/rides/match', async (req, res) => {
     for (const candidate of candidates) {
       const [driverId, distanceKm, coordinates] = candidate;
       const status = await client.hget(`driver:meta:${driverId}`, 'status');
-      if (status !== 'idle') {
+      const updatedAt = Number(
+        await client.hget(`driver:meta:${driverId}`, 'updatedAt'),
+      );
+      const isFresh = Date.now() - updatedAt <= DRIVER_STALE_AFTER_MS;
+
+      if (status !== 'idle' && isFresh) {
         const match = {
           driverId,
           distanceKm: Number(distanceKm),
@@ -103,6 +109,7 @@ app.post('/api/rides/match', async (req, res) => {
 
     const fallback = [...driverPositions.values()]
       .filter((driver) => driver.status !== 'idle')
+      .filter((driver) => Date.now() - driver.lastSeen <= DRIVER_STALE_AFTER_MS)
       .map((driver) => ({
         ...driver,
         distanceKm:
@@ -192,11 +199,13 @@ io.on('connection', (socket) => {
       const startTime = process.hrtime();
       const { driverId, longitude, latitude, bearing, status } = data;
       driverPositions.set(driverId, {
+        socketId: socket.id,
         driverId,
         longitude,
         latitude,
         bearing,
         status,
+        lastSeen: Date.now(),
       });
 
       try {
@@ -231,6 +240,30 @@ io.on('connection', (socket) => {
   }
 
   socket.on('disconnect', () => {
+    if (role === 'driver') {
+      const driver = driverPositions.get(userId);
+      if (driver?.socketId === socket.id) {
+        driverPositions.delete(userId);
+        if (client.status === 'ready') {
+          client
+            .zrem('active_drivers', userId)
+            .catch((error) =>
+              console.error(
+                `Failed to remove ${userId} from Redis:`,
+                error.message,
+              ),
+            );
+          client
+            .del(`driver:meta:${userId}`)
+            .catch((error) =>
+              console.error(
+                `Failed to remove metadata for ${userId}:`,
+                error.message,
+              ),
+            );
+        }
+      }
+    }
     console.log(`❌ Node Left Network: [${userId}]`);
   });
 });
@@ -245,6 +278,19 @@ const client = new Redis({
 });
 
 client.on('error', (err) => console.error('Redis Client Error:', err.message));
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [driverId, driver] of driverPositions) {
+    if (now - driver.lastSeen > DRIVER_STALE_AFTER_MS) {
+      driverPositions.delete(driverId);
+      if (client.status === 'ready') {
+        client.zrem('active_drivers', driverId).catch(() => {});
+        client.del(`driver:meta:${driverId}`).catch(() => {});
+      }
+    }
+  }
+}, DRIVER_STALE_AFTER_MS);
 
 async function startServer() {
   try {
