@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import {
+  MapContainer,
+  Marker,
+  Polyline,
+  TileLayer,
+  useMapEvents,
+} from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import { MapPin, Navigation } from 'lucide-react';
 import { useFleet } from '../context/fleetContext';
@@ -54,6 +60,96 @@ function MapClickHandler({ onMapSelection }) {
       onMapSelection({ latitude: latlng.lat, longitude: latlng.lng }),
   });
   return null;
+}
+
+function distanceInKm(first, second) {
+  const earthRadiusKm = 6371;
+  const latitudeDelta = ((second.latitude - first.latitude) * Math.PI) / 180;
+  const longitudeDelta = ((second.longitude - first.longitude) * Math.PI) / 180;
+  const latitudeOne = (first.latitude * Math.PI) / 180;
+  const latitudeTwo = (second.latitude * Math.PI) / 180;
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.sin(longitudeDelta / 2) ** 2 *
+      Math.cos(latitudeOne) *
+      Math.cos(latitudeTwo);
+
+  return (
+    earthRadiusKm *
+    2 *
+    Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
+  );
+}
+
+function formatDuration(seconds) {
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
+}
+
+function RouteLayer({ pickup, destination, onRouteUpdate }) {
+  const [route, setRoute] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fallbackDistance = distanceInKm(pickup, destination);
+    const fallback = {
+      coordinates: [
+        [pickup.latitude, pickup.longitude],
+        [destination.latitude, destination.longitude],
+      ],
+      distanceKm: fallbackDistance,
+      durationSeconds: (fallbackDistance / 30) * 3600,
+      isFallback: true,
+    };
+
+    setRoute(fallback);
+    onRouteUpdate(fallback);
+
+    const requestRoute = async () => {
+      try {
+        const coordinates = `${pickup.longitude},${pickup.latitude};${destination.longitude},${destination.latitude}`;
+        const response = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`,
+          { signal: controller.signal },
+        );
+        if (!response.ok) throw new Error('Routing unavailable');
+        const result = await response.json();
+        const [primaryRoute] = result.routes || [];
+        if (!primaryRoute) throw new Error('No route found');
+
+        const routed = {
+          coordinates: primaryRoute.geometry.coordinates.map(
+            ([longitude, latitude]) => [latitude, longitude],
+          ),
+          distanceKm: primaryRoute.distance / 1000,
+          durationSeconds: primaryRoute.duration,
+          isFallback: false,
+        };
+        setRoute(routed);
+        onRouteUpdate(routed);
+      } catch (error) {
+        if (error.name !== 'AbortError') onRouteUpdate(fallback);
+      }
+    };
+
+    requestRoute();
+    return () => controller.abort();
+  }, [pickup, destination, onRouteUpdate]);
+
+  if (!route) return null;
+  return (
+    <Polyline
+      positions={route.coordinates}
+      pathOptions={{
+        color: '#2563eb',
+        weight: 5,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }}
+    />
+  );
 }
 
 function createCarIcon(vehicle, selected, hasSelection) {
@@ -120,6 +216,7 @@ export default function MapCanvas({
 }) {
   const { vehicles } = useFleet();
   const [tileLayer, setTileLayer] = useState('street');
+  const [routeSummary, setRouteSummary] = useState(null);
   const fleet =
     Object.keys(vehicles).length > 0 ? Object.values(vehicles) : demoVehicles;
 
@@ -163,6 +260,11 @@ export default function MapCanvas({
           url={TILE_LAYERS[tileLayer].url}
         />
         <MapClickHandler onMapSelection={onMapSelection} />
+        <RouteLayer
+          pickup={pickup}
+          destination={destination}
+          onRouteUpdate={setRouteSummary}
+        />
         {fleet.map((vehicle, index) => (
           <AnimatedVehicleMarker
             key={vehicle.driverId || index}
@@ -201,6 +303,23 @@ export default function MapCanvas({
           </button>
         ))}
       </div>
+      {routeSummary && (
+        <div className="absolute bottom-20 right-8 z-[401] rounded-xl border border-white/80 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md">
+          <div className="flex items-baseline gap-3">
+            <span className="text-sm font-bold text-zinc-900">
+              {routeSummary.distanceKm.toFixed(1)} km
+            </span>
+            <span className="text-xs font-semibold text-blue-600">
+              {formatDuration(routeSummary.durationSeconds)}
+            </span>
+          </div>
+          <p className="mt-0.5 text-[10px] text-zinc-500">
+            {routeSummary.isFallback
+              ? 'Estimated direct route'
+              : 'Driving route'}
+          </p>
+        </div>
+      )}
       <div className="absolute bottom-20 left-1/2 z-[401] -translate-x-1/2 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-zinc-600 shadow-lg backdrop-blur-md">
         Click map to set {selectionMode === 'pickup' ? 'pickup' : 'destination'}
       </div>
