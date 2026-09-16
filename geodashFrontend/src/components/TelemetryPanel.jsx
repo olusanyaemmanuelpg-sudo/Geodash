@@ -8,37 +8,55 @@ import {
   Sun,
   Pause,
   Play,
+  X,
 } from 'lucide-react';
 
-export default function TelemetryPanel({ isDarkMode, setIsDarkMode }) {
+export default function TelemetryPanel({
+  isDarkMode,
+  setIsDarkMode,
+  isOpen,
+  onClose,
+}) {
   const { metrics } = useFleet();
   const [isSimulating, setIsSimulating] = useState(true);
 
   return (
     <div
-      className={`absolute top-4 right-4 z-10 w-85 rounded-xl p-4 shadow-xl border backdrop-blur-md transition-all duration-500
+      className={`telemetry-panel absolute top-4 right-4 z-10 w-[calc(100vw-2rem)] max-w-[21.25rem] rounded-xl p-4 shadow-xl border backdrop-blur-md transition-all duration-500 ${isOpen ? 'is-open' : ''}
       ${isDarkMode ? 'bg-black/90 border-zinc-800 text-white' : 'bg-white/95 border-gray-100 text-zinc-900'}`}
     >
-      <div className="flex items-center justify-between border-b pb-3 mb-3 border-inherit">
+      <div className="telemetry-panel__header flex items-center justify-between border-b pb-3 mb-3 border-inherit">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-blue-500" />
           <span className="font-bold text-sm tracking-wide">
             Fleet Telemetry
           </span>
         </div>
-        <button
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="p-1.5 rounded-lg border border-inherit hover:bg-zinc-500/10 transition"
-        >
-          {isDarkMode ? (
-            <Sun className="w-4 h-4 text-amber-500" />
-          ) : (
-            <Moon className="w-4 h-4" />
-          )}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            aria-label="Toggle dark mode"
+            className="p-1.5 rounded-lg border border-inherit hover:bg-zinc-500/10 transition"
+          >
+            {isDarkMode ? (
+              <Sun className="w-4 h-4 text-amber-500" />
+            ) : (
+              <Moon className="w-4 h-4" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close telemetry panel"
+            className="telemetry-panel__close hidden p-1.5 rounded-lg border border-inherit hover:bg-zinc-500/10 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="telemetry-panel__metrics space-y-3">
         {/* System Latency Dashboard Signal */}
         <div className="flex items-center justify-between text-xs">
           <span className="opacity-70 flex items-center gap-1.5">

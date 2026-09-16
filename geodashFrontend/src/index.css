@@ -72,6 +72,10 @@
   filter: saturate(0.82) contrast(1.02);
 }
 
+.mobile-panel-actions {
+  display: none;
+}
+
 .fleet-car-marker {
   background: transparent;
   border: 0;
@@ -226,5 +230,157 @@
   100% {
     transform: scale(1.35);
     opacity: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .leaflet-control-zoom {
+    display: none;
+  }
+
+  .passenger-sidebar {
+    display: none;
+  }
+
+  .passenger-sidebar.is-open {
+    display: flex;
+    top: auto;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    max-width: none;
+    max-height: min(52vh, 32rem);
+    border-radius: 1rem;
+    box-shadow: 0 -8px 30px rgb(15 23 42 / 16%);
+  }
+
+  .passenger-sidebar__locations {
+    padding: 0.75rem;
+  }
+
+  .passenger-sidebar__locations h1 {
+    font-size: 1rem;
+  }
+
+  .passenger-sidebar__tiers {
+    max-height: 15vh;
+    padding: 0.5rem;
+  }
+
+  .passenger-sidebar__tiers > div {
+    padding: 0.65rem;
+  }
+
+  .passenger-sidebar__checkout {
+    padding: 0.75rem;
+  }
+
+  .telemetry-panel {
+    display: none;
+  }
+
+  .telemetry-panel.is-open {
+    display: block;
+    top: 0.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    max-width: none;
+    padding: 0.75rem;
+    border-radius: 1rem;
+    box-shadow: 0 6px 20px rgb(15 23 42 / 14%);
+  }
+
+  .telemetry-panel__header {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .telemetry-panel__header span {
+    font-size: 0.75rem;
+  }
+
+  .telemetry-panel:not(.is-open) .telemetry-panel__metrics,
+  .telemetry-panel:not(.is-open) > button {
+    display: none;
+  }
+
+  .telemetry-panel.is-open .telemetry-panel__metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .telemetry-panel.is-open > button {
+    display: flex;
+  }
+
+  .telemetry-panel.is-open .telemetry-panel__close {
+    display: block;
+  }
+
+  .mobile-panel-actions {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    z-index: 500;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.35rem;
+    border: 1px solid rgb(255 255 255 / 75%);
+    border-radius: 0.9rem;
+    background: rgb(255 255 255 / 92%);
+    box-shadow: 0 8px 24px rgb(15 23 42 / 18%);
+    backdrop-filter: blur(12px);
+  }
+
+  .mobile-panel-action {
+    min-height: 2.75rem;
+    flex: 1;
+    border: 0;
+    border-radius: 0.65rem;
+    background: #f4f4f5;
+    color: #27272a;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .mobile-panel-action.is-active {
+    background: #18181b;
+    color: white;
+  }
+
+  .mobile-panel-actions.is-hidden {
+    display: none;
+  }
+
+  .map-layer-switcher {
+    top: 4.25rem;
+    right: 0.5rem;
+    left: auto;
+    border-radius: 999px;
+    opacity: 0.9;
+  }
+
+  .map-layer-switcher.telemetry-open {
+    top: 13.25rem;
+  }
+
+  .map-layer-switcher button {
+    padding: 0.4rem 0.65rem;
+  }
+
+  .route-summary {
+    right: 0.5rem;
+    bottom: 60%;
+  }
+
+  .map-selection-hint,
+  .map-legend {
+    display: none;
   }
 }

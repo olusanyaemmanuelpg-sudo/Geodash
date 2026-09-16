@@ -24,6 +24,8 @@ function App() {
   const [selectedDriverId, setSelectedDriverId] = useState(null);
   const [isMatching, setIsMatching] = useState(false);
   const [matchMessage, setMatchMessage] = useState('');
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -124,6 +126,7 @@ function App() {
           destination={destination}
           onMapSelection={handleMapSelection}
           selectedDriverId={selectedDriverId}
+          isTelemetryOpen={isTelemetryOpen}
         />
 
         {/* Floating Left Uber-Style Booking Form */}
@@ -136,10 +139,43 @@ function App() {
           onRequestRide={handleRequestRide}
           isMatching={isMatching}
           matchMessage={matchMessage}
+          isOpen={isBookingOpen}
+          onClose={() => setIsBookingOpen(false)}
         />
 
         {/* Floating Top-Right Performance Metric Deck */}
-        <TelemetryPanel isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+        <TelemetryPanel
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+          isOpen={isTelemetryOpen}
+          onClose={() => setIsTelemetryOpen(false)}
+        />
+
+        <div
+          className={`mobile-panel-actions ${isBookingOpen || isTelemetryOpen ? 'is-hidden' : ''}`}
+          aria-label="Open dashboard panels"
+        >
+          <button
+            type="button"
+            className={`mobile-panel-action ${isBookingOpen ? 'is-active' : ''}`}
+            onClick={() => {
+              setIsBookingOpen((isOpen) => !isOpen);
+              setIsTelemetryOpen(false);
+            }}
+          >
+            {isBookingOpen ? 'Close booking' : 'Book a ride'}
+          </button>
+          <button
+            type="button"
+            className={`mobile-panel-action ${isTelemetryOpen ? 'is-active' : ''}`}
+            onClick={() => {
+              setIsTelemetryOpen((isOpen) => !isOpen);
+              setIsBookingOpen(false);
+            }}
+          >
+            {isTelemetryOpen ? 'Close telemetry' : 'Telemetry'}
+          </button>
+        </div>
       </div>
     </FleetProvider>
   );

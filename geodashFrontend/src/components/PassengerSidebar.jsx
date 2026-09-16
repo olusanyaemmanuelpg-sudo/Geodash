@@ -18,6 +18,8 @@ export default function PassengerSidebar({
   onRequestRide,
   isMatching,
   matchMessage,
+  isOpen,
+  onClose,
 }) {
   const [selectedTier, setSelectedTier] = useState('standard');
 
@@ -66,9 +68,11 @@ export default function PassengerSidebar({
   ];
 
   return (
-    <div className="absolute top-4 left-4 z-10 w-96 max-h-[calc(100vh-2rem)] bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-xl shadow-xl flex flex-col overflow-hidden text-zinc-900 dark:text-white transition-colors duration-500">
+    <div
+      className={`passenger-sidebar absolute top-4 left-4 z-10 w-[calc(100vw-2rem)] max-w-96 max-h-[calc(100vh-2rem)] bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-xl shadow-xl flex flex-col overflow-hidden text-zinc-900 dark:text-white transition-colors duration-500 ${isOpen ? 'is-open' : ''}`}
+    >
       {/* Address Form Inputs */}
-      <div className="p-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
+      <div className="passenger-sidebar__locations p-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
         <div className="flex items-center justify-between mb-4">
           <h1 className="font-bold text-lg tracking-tight">Book a Ride</h1>
           <span className="text-xs bg-gray-200/70 dark:bg-zinc-800 px-2 py-1 rounded-md font-medium text-gray-600 dark:text-gray-300 cursor-pointer">
@@ -116,7 +120,7 @@ export default function PassengerSidebar({
       </div>
 
       {/* Ride Tiers List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-[380px]">
+      <div className="passenger-sidebar__tiers flex-1 overflow-y-auto p-3 space-y-2 max-h-[380px]">
         {rideTiers.map((tier) => {
           const IconComponent = tier.icon;
           const isSelected = selectedTier === tier.id;
@@ -170,7 +174,7 @@ export default function PassengerSidebar({
       </div>
 
       {/* Payment Checkout Block */}
-      <div className="p-4 border-t border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3">
+      <div className="passenger-sidebar__checkout p-4 border-t border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3">
         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-gray-400" />
@@ -185,6 +189,15 @@ export default function PassengerSidebar({
           <p className="px-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
             {matchMessage}
           </p>
+        )}
+        {matchMessage && !isMatching && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 text-xs font-bold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+          >
+            Back to map
+          </button>
         )}
         <button
           type="button"

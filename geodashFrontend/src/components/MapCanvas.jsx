@@ -213,6 +213,7 @@ export default function MapCanvas({
   destination,
   onMapSelection,
   selectedDriverId,
+  isTelemetryOpen,
 }) {
   const { vehicles } = useFleet();
   const [tileLayer, setTileLayer] = useState('street');
@@ -291,7 +292,9 @@ export default function MapCanvas({
           })}
         />
       </MapContainer>
-      <div className="absolute right-4 top-4 z-[401] flex items-center gap-1 rounded-xl border border-white/70 bg-white/90 p-1 shadow-lg backdrop-blur-md">
+      <div
+        className={`map-layer-switcher absolute right-4 top-4 z-[401] flex items-center gap-1 rounded-xl border border-white/70 bg-white/90 p-1 shadow-lg backdrop-blur-md ${isTelemetryOpen ? 'telemetry-open' : ''}`}
+      >
         {Object.entries(TILE_LAYERS).map(([id, layer]) => (
           <button
             key={id}
@@ -304,7 +307,7 @@ export default function MapCanvas({
         ))}
       </div>
       {routeSummary && (
-        <div className="absolute bottom-20 right-8 z-[401] rounded-xl border border-white/80 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md">
+        <div className="route-summary absolute bottom-20 right-8 z-[401] rounded-xl border border-white/80 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md">
           <div className="flex items-baseline gap-3">
             <span className="text-sm font-bold text-zinc-900">
               {routeSummary.distanceKm.toFixed(1)} km
@@ -320,7 +323,7 @@ export default function MapCanvas({
           </p>
         </div>
       )}
-      <div className="absolute bottom-20 left-1/2 z-[401] -translate-x-1/2 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-zinc-600 shadow-lg backdrop-blur-md">
+      <div className="map-selection-hint absolute bottom-20 left-1/2 z-[401] -translate-x-1/2 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-zinc-600 shadow-lg backdrop-blur-md">
         Click map to set {selectionMode === 'pickup' ? 'pickup' : 'destination'}
       </div>
       <div className="pointer-events-none absolute inset-0 z-[400] border border-black/10" />
@@ -329,7 +332,7 @@ export default function MapCanvas({
         Service area
       </div>
       <div
-        className={`absolute bottom-8 right-8 z-[401] flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-medium shadow-xl backdrop-blur-md ${isDarkMode ? 'border-white/10 bg-zinc-950/85 text-zinc-400' : 'border-white/70 bg-white/90 text-zinc-600'}`}
+        className={`map-legend absolute bottom-8 right-8 z-[401] flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-medium shadow-xl backdrop-blur-md ${isDarkMode ? 'border-white/10 bg-zinc-950/85 text-zinc-400' : 'border-white/70 bg-white/90 text-zinc-600'}`}
       >
         <MapPin className="h-3.5 w-3.5 text-emerald-500" />
         <span>Pickup zone</span>
