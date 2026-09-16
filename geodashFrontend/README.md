@@ -7,13 +7,13 @@ Geodash helps developers build ride-sharing interfaces by providing a complete p
 ```mermaid
 flowchart LR
   WebClient["React Client"]
-  OSM["OpenStreetMap API"]
+  OSM["OpenStreetMap / OSRM"]
   WSGateway["WebSocket Gateway"]
   APIServer["Booking API"]
   RedisCache[("Redis Store")]
   MongoDB[("MongoDB Database")]
 
-  WebClient -- "Geocoding" --> OSM
+  WebClient -- "Geocoding & Routing" --> OSM
   WebClient -- "Live Fleet Data" --> WSGateway
   WebClient -- "Ride Requests" --> APIServer
   WSGateway --> RedisCache
@@ -106,6 +106,12 @@ The client application integrates with backend services to provide booking funct
 - 400: Bad request if coordinates are missing.
 - 404: No driver found available in the requested vicinity.
 
+### Environment Variables
+
+The frontend relies on the following environment variables:
+
+- `VITE_API_URL`: The base URL for the backend API and WebSocket server. Defaults to `http://localhost:3000` if not provided.
+
 ## Installation
 
 Follow these steps to set up the development environment on your local machine.
@@ -152,6 +158,7 @@ The interface is split into three main components:
 | Build Tool | [Vite](https://vitejs.dev/)                                                        |
 | Styling    | [Tailwind CSS 4](https://tailwindcss.com/)                                         |
 | Mapping    | [Leaflet](https://leafletjs.com/) & [React-Leaflet](https://react-leaflet.js.org/) |
+| Routing    | OSRM (Open Source Routing Machine)                                                 |
 | Networking | [Socket.io Client](https://socket.io/)                                             |
 | Icons      | [Lucide React](https://lucide.dev/)                                                |
 | Linting    | [Oxlint](https://oxc.rs/docs/guide/usage/linter.html)                              |
