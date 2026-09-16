@@ -5,7 +5,7 @@ const express = require('express');
 const { createServer } = require('http'); // Required for Socket.io mapping
 const { Server } = require('socket.io'); // Required for Socket.io mapping
 const app = express();
-const port = 3000;
+const port = Number(process.env.PORT) || 3000;
 const cors = require('cors');
 const connectDB = require('./config/db.js');
 const mongoose = require('mongoose');
@@ -88,7 +88,7 @@ app.post('/api/rides/match', async (req, res) => {
       );
       const isFresh = Date.now() - updatedAt <= DRIVER_STALE_AFTER_MS;
 
-      if (status !== 'idle' && isFresh) {
+      if (status === 'idle' && isFresh) {
         const match = {
           driverId,
           distanceKm: Number(distanceKm),
@@ -108,7 +108,7 @@ app.post('/api/rides/match', async (req, res) => {
     }
 
     const fallback = [...driverPositions.values()]
-      .filter((driver) => driver.status !== 'idle')
+      .filter((driver) => driver.status === 'idle')
       .filter((driver) => Date.now() - driver.lastSeen <= DRIVER_STALE_AFTER_MS)
       .map((driver) => ({
         ...driver,
@@ -164,6 +164,13 @@ app.get('/api/rides/:rideRequestId', async (req, res) => {
 
 const httpServer = createServer(app);
 
+const configuredOrigins = new Set(
+  (process.env.FRONTEND_ORIGINS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
+
 const isAllowedOrigin = (origin, callback) => {
   if (!origin) {
     callback(null, true);
@@ -172,9 +179,10 @@ const isAllowedOrigin = (origin, callback) => {
 
   try {
     const { hostname, port: originPort } = new URL(origin);
-    const allowed =
+    const isLocalDevelopment =
       (hostname === 'localhost' || hostname === '127.0.0.1') &&
       (!originPort || originPort === '5173' || originPort === '5174');
+    const allowed = isLocalDevelopment || configuredOrigins.has(origin);
     callback(null, allowed);
   } catch {
     callback(null, false);
@@ -300,8 +308,8 @@ async function startServer() {
     console.error('Redis connection failed:', error.message);
   }
 
-  httpServer.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+  httpServer.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on port ${port}`);
   });
 }
 
