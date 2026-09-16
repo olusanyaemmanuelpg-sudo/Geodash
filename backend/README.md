@@ -23,7 +23,7 @@ flowchart LR
 
 ## Installation
 
-Follow these instructions to set up the project locally.
+Follow these instructions to set up the project locally. 
 
 1. Clone the Repository:
 
@@ -40,15 +40,24 @@ npm install
 3. Create a `.env` file in the root directory and configure the environment variables:
 
 ```bash
+PORT=3000
 REDIS_HOST_URL=127.0.0.1
 REDIS_PORT=6379
 REDIS_PASSWORD=your_secure_password
+FRONTEND_ORIGINS=http://example.com,https://app.example.com
 ```
 
 4. Start the development server:
 
 ```bash
 npm run dev
+```
+
+Alternatively, you can run the application using Docker:
+
+```bash
+docker build -t ride-matching-backend .
+docker run -p 3000:3000 --env-file .env ride-matching-backend
 ```
 
 ## Usage
@@ -120,13 +129,14 @@ sequenceDiagram
 
 ## Technologies Used
 
-| Technology | Badge                                                                                                                                  |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js    | [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)      |
-| Express    | [![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)     |
+| Technology | Badge |
+| ---------- | ----- |
+| Node.js    | [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/) |
+| Express    | [![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/) |
 | Socket.io  | [![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white)](https://socket.io/) |
-| Redis      | [![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)                |
-| MongoDB    | [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)   |
+| Redis      | [![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/) |
+| MongoDB    | [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/) |
+| Docker     | [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/) |
 
 ## API Documentation
 
@@ -134,9 +144,11 @@ sequenceDiagram
 
 The server requires the following environment variables to run properly:
 
+- `PORT`: The port the Express server binds to. Defaults to `3000`.
 - `REDIS_HOST_URL`: The hostname or IP address of the cache server. Defaults to `127.0.0.1`.
 - `REDIS_PORT`: The port for the cache server. Defaults to `6379`.
 - `REDIS_PASSWORD`: The authentication password for the cache server.
+- `FRONTEND_ORIGINS`: Comma-separated list of allowed frontend origins for CORS and Socket.io. Localhost Vite origins are allowed automatically in development.
 
 ### REST Endpoints
 
