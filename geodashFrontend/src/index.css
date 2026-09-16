@@ -1,0 +1,230 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+.leaflet-container {
+  position: relative;
+  z-index: 1;
+  background: #dbe4e1;
+  font-family: inherit;
+}
+
+.fleet-map-fallback {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #d8e1dd;
+  color: #53635f;
+  z-index: 0;
+}
+
+.fleet-map-fallback svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.fleet-map-fallback path {
+  fill: none;
+  stroke: #f8faf9;
+  stroke-width: 16;
+  vector-effect: non-scaling-stroke;
+}
+
+.fleet-map-fallback path:not(.fleet-map-fallback__minor-road) {
+  filter: drop-shadow(0 1px 0 #aebdb7);
+}
+
+.fleet-map-fallback__minor-road {
+  stroke: #eef4f1;
+  stroke-width: 7;
+}
+
+.fleet-map-fallback__label {
+  position: absolute;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  opacity: 0.72;
+}
+
+.fleet-map-fallback__label--city {
+  top: 24%;
+  left: 42%;
+  font-size: 18px;
+}
+
+.fleet-map-fallback__label--district {
+  top: 58%;
+  left: 56%;
+}
+
+.fleet-map-fallback__label--water {
+  top: 42%;
+  left: 14%;
+  color: #6b9ca0;
+  font-size: 15px;
+}
+
+.leaflet-tile-pane {
+  filter: saturate(0.82) contrast(1.02);
+}
+
+.fleet-car-marker {
+  background: transparent;
+  border: 0;
+}
+
+.fleet-car-marker.is-dimmed .fleet-car {
+  opacity: 1;
+}
+
+.fleet-car-marker.is-selected .fleet-car {
+  z-index: 20;
+  filter: drop-shadow(0 0 9px rgb(239 68 68 / 95%))
+    drop-shadow(0 5px 4px rgb(15 23 42 / 45%));
+}
+
+.fleet-car-marker.is-selected .fleet-car__body {
+  background: linear-gradient(90deg, #7f1d1d, #dc2626 50%, #7f1d1d);
+  border-color: #fecaca;
+}
+
+.fleet-car-marker.is-selected .fleet-car__signal {
+  border-color: rgb(239 68 68 / 75%);
+}
+
+.pickup-marker,
+.destination-marker {
+  background: transparent;
+  border: 0;
+}
+
+.pickup-marker__pin,
+.destination-marker__pin {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 3px solid white;
+  border-radius: 999px 999px 999px 4px;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  transform: rotate(-45deg);
+  box-shadow: 0 3px 8px rgb(15 23 42 / 35%);
+}
+
+.pickup-marker__pin {
+  background: #2563eb;
+}
+.destination-marker__pin {
+  background: #111827;
+}
+
+.fleet-car {
+  position: relative;
+  width: 34px;
+  height: 58px;
+  transform: rotate(var(--bearing));
+  transform-origin: center;
+  filter: drop-shadow(0 5px 4px rgb(15 23 42 / 45%));
+}
+
+.fleet-car__body {
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 22px;
+  height: 54px;
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 12px 12px 8px 8px;
+  background: linear-gradient(90deg, #27272a, #050505 50%, #27272a);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 12%);
+}
+
+.fleet-car__glass {
+  position: absolute;
+  left: 9px;
+  width: 16px;
+  border: 1px solid rgb(186 230 253 / 55%);
+  background: linear-gradient(#bae6fd, #0f766e 65%, #0f172a);
+}
+
+.fleet-car__glass--front {
+  top: 9px;
+  height: 16px;
+  border-radius: 8px 8px 3px 3px;
+}
+
+.fleet-car__glass--rear {
+  top: 27px;
+  height: 10px;
+  border-radius: 2px;
+  background: #334155;
+}
+
+.fleet-car__wheel {
+  position: absolute;
+  top: 14px;
+  width: 4px;
+  height: 12px;
+  border-radius: 999px;
+  background: #020617;
+  box-shadow: 0 21px 0 #020617;
+}
+
+.fleet-car__wheel--left {
+  left: 4px;
+}
+.fleet-car__wheel--right {
+  right: 4px;
+}
+
+.fleet-car__headlights,
+.fleet-car__taillights {
+  position: absolute;
+  left: 11px;
+  width: 4px;
+  height: 3px;
+  border-radius: 999px;
+  box-shadow: 9px 0 currentColor;
+}
+
+.fleet-car__headlights {
+  top: 4px;
+  color: #f8fafc;
+}
+
+.fleet-car__taillights {
+  bottom: 5px;
+  color: #ef4444;
+}
+
+.is-active {
+  color: #34d399;
+}
+.is-idle {
+  color: #fbbf24;
+}
+
+.fleet-car__signal {
+  position: absolute;
+  inset: -8px;
+  border: 1px solid rgb(16 185 129 / 40%);
+  border-radius: 999px;
+  animation: fleet-pulse 1.8s ease-out infinite;
+}
+
+@keyframes fleet-pulse {
+  0% {
+    transform: scale(0.78);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
