@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
 const FleetContext = createContext(null);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const FleetProvider = ({ children }) => {
   const [vehicles, setVehicles] = useState({});
@@ -16,7 +17,7 @@ export const FleetProvider = ({ children }) => {
 
   useEffect(() => {
     // Connect to our upcoming Express WebSocket server gateway
-    const socket = io('http://localhost:3000', {
+    const socket = io(API_URL, {
       query: { userId: 'dashboard_viewer', role: 'passenger' },
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

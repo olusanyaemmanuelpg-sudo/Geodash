@@ -4,6 +4,8 @@ import PassengerSidebar from './components/PassengerSidebar';
 import TelemetryPanel from './components/TelemetryPanel';
 import MapCanvas from './components/MapCanvas';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectionMode, setSelectionMode] = useState('pickup');
@@ -86,7 +88,7 @@ function App() {
     setSelectedDriverId(null);
 
     try {
-      const response = await fetch('http://localhost:3000/api/rides/match', {
+      const response = await fetch(`${API_URL}/api/rides/match`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
