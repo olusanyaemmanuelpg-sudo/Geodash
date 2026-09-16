@@ -2,7 +2,7 @@
 const { io } = require('socket.io-client');
 
 // Connects directly to the custom Express/HTTP port you established in server.js
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
 const NUMBER_OF_DRIVERS = 25;
 
 // Center point of your simulation (Downtown San Francisco grid matching passenger inputs)
