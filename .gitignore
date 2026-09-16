@@ -1,0 +1,4 @@
+.env
+.git-history-backup/
+node_modules/
+dist/
